@@ -1,15 +1,23 @@
 #include <iostream>
+#include "linked_list_node.cpp"
 
-class Node {
-public:
-    int current;
-    Node* next = nullptr;
+/*
+Notes:
 
-    Node(int c) {
-        current = c;
-        // std::cout << "Added: " << c << std::endl;
-    };
-};
+A doubly linked list is a linear collection of nodes, where  each node contains data, a pointer to the next node, and a pointer to the previous node, allowing for both forward and backward traversal.
+
+Access by index: O(N)
+Search by value: O(N)
+Insert at head: O(1)
+Delete head: O(1)
+Insert at tail: O(1)
+Delete tail: O(1)
+Insert after given node/iterator: O(1)
+Insert before given node/iterator: O(1)
+Delete given node when you have its iterator: O(1)
+Splice/move nodes given iterators: O(1)
+Forward traversal: O(N)
+*/
 
 class LinkedList {
 private:
@@ -43,16 +51,6 @@ public:
 
     // O(1)
     bool append(int newVal) {
-        // This way is inefficient O(N)
-
-        // Node* currentNode = head;
-
-        // while (currentNode->next != nullptr) {
-        //     currentNode = currentNode->next;
-        // }
-
-        // currentNode->next = new Node(newVal);
-
         length++;
 
         if (tail == nullptr) {
@@ -61,15 +59,18 @@ public:
             return true;
         }
 
-        tail->next = new Node(newVal);
+        Node* newNode = new Node(newVal);
+        newNode->prev = tail;
+        tail->next = newNode;
+
         tail = tail->next;
 
         return true;
     };
 
     // O(1)
-    bool removeFirst() {
-        if (head == nullptr) return false;
+    Node* removeFirst() {
+        if (head == nullptr) return nullptr;
 
         length--;
 
@@ -78,38 +79,35 @@ public:
         if (head->next == nullptr) {
             head = nullptr;
             tail = nullptr;
-            delete originalHead;
 
-            return true;
+            return originalHead;
         }
 
         head = head->next;
-        delete originalHead;
+        head->prev = nullptr;
 
-        return true;
+        return originalHead;
     };
 
-    // O(N)
-    bool pop() {
-        if (head == nullptr) return false;
+    // O(1)
+    Node* pop() {
+        if (head == nullptr) return nullptr;
 
         length--;
 
-        if (head->next == nullptr) {
+        if (tail->prev == nullptr) {
+            Node* removed = tail;
             head = nullptr;
             tail = nullptr;
-            return true;
+
+            return removed;
         }
 
-        Node* currentNode = head;
-        while (currentNode->next->next != nullptr) {
-            currentNode = currentNode->next;
-        }
+        Node* removed = tail;
+        tail->prev->next = nullptr;
+        tail = tail->prev;
 
-        currentNode->next = nullptr;
-        tail = currentNode;
-
-        return true;
+        return removed;
     };
 
     // O(N)
@@ -130,10 +128,12 @@ public:
             }
         }
 
+        // O(1)
         if (index == 0) {
             Node* newNode = new Node(item);
 
             newNode->next = head;
+            head->prev = newNode;
             head = newNode;
 
             length++;
@@ -153,6 +153,8 @@ public:
         Node* newNode = new Node(item);
 
         newNode->next = currentNode->next;
+        newNode->prev = currentNode;
+        currentNode->next->prev = newNode;
         currentNode->next = newNode;
 
         if (currentNode == tail) {
@@ -198,11 +200,13 @@ public:
     Node* remove(int val) {
         if (head == nullptr) return nullptr;
 
+        // O(1)
         if (head->current == val) {
             Node* nodeToDelete = head;
 
             head = head->next;
             if (head == nullptr) tail = nullptr;
+            else head->prev = nullptr;
 
             nodeToDelete->next = nullptr;
             return nodeToDelete;
@@ -217,44 +221,46 @@ public:
 
         Node* nodeToDelete = currentNode->next;
         currentNode->next = nodeToDelete->next;
+        nodeToDelete->next->prev = currentNode;
 
         if (nodeToDelete == tail) tail = currentNode;
 
         nodeToDelete->next = nullptr;
+
         return nodeToDelete;
     };
 };
 
-int main () {
-    LinkedList ll = LinkedList(5);
-    ll.append(10);
-    ll.append(15);
-    ll.append(17);
+// int main () {
+//     LinkedList ll = LinkedList(5);
+//     ll.append(10);
+//     ll.append(15);
+//     ll.append(17);
 
-    std::cout << "Length of the linked list: " << ll.getLength() << std::endl;
+//     std::cout << "Length of the linked list: " << ll.getLength() << std::endl;
 
-    ll.printAll();
+//     ll.printAll();
 
-    ll.pop();
+//     ll.pop();
 
-    std::cout << std::endl;
-    ll.printAll();
+//     std::cout << std::endl;
+//     ll.printAll();
 
-    ll.insert(7, 1);
+//     ll.insert(7, 1);
 
-    std::cout << std::endl;
-    ll.printAll();
+//     std::cout << std::endl;
+//     ll.printAll();
 
-    std::cout << std::endl;
+//     std::cout << std::endl;
 
-    std::cout << "Index of 7: " << ll.getIndex(7) << std::endl;
+//     std::cout << "Index of 7: " << ll.getIndex(7) << std::endl;
 
-    std::cout << "Value at index 1: " << ll.nodeAtIndex(1)->current << std::endl;
+//     std::cout << "Value at index 1: " << ll.nodeAtIndex(1)->current << std::endl;
 
-    std::cout << std::endl;
+//     std::cout << std::endl;
 
-    std::cout << "Removed: " << ll.remove(10)->current << std::endl;
-    ll.printAll();
+//     std::cout << "Removed: " << ll.remove(10)->current << std::endl;
+//     ll.printAll();
 
-    return 0;
-}
+//     return 0;
+// }
